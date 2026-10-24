@@ -329,10 +329,15 @@ async fn crawling_fn(
         ));
     let addresses =
         block.addresses_with_balance_change(&native_token, &ibc_tokens);
-    let all_changed_tokens_supply = addresses
+    let mut all_changed_tokens_supply = addresses
         .iter()
         .map(|bc| bc.token.clone())
         .collect::<HashSet<_>>();
+
+    if new_epoch {
+        all_changed_tokens_supply
+            .extend(query_tokens(&client).await.into_rpc_error()?);
+    }
 
     let token_supplies =
         query_token_supplies(&client, &all_changed_tokens_supply, epoch)

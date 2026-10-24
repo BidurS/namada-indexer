@@ -342,22 +342,30 @@ pub async fn query_all_bonds_and_unbonds(
         for bd in details.bonds {
             let id = bond_id.clone();
             let key = (id.source, id.validator, bd.start);
+            let net_amount = bd
+                .amount
+                .checked_sub(bd.slashed_amount.unwrap_or_default())
+                .unwrap_or_default();
 
             if let Some(record) = bonds.get_mut(&key) {
-                *record = record.checked_add(bd.amount).unwrap();
+                *record = record.checked_add(net_amount).unwrap();
             } else {
-                bonds.insert(key, bd.amount);
+                bonds.insert(key, net_amount);
             }
         }
 
         for ud in details.unbonds {
             let id = bond_id.clone();
             let key = (id.source, id.validator, ud.withdraw);
+            let net_amount = ud
+                .amount
+                .checked_sub(ud.slashed_amount.unwrap_or_default())
+                .unwrap_or_default();
 
             if let Some(record) = unbonds.get_mut(&key) {
-                *record = record.checked_add(ud.amount).unwrap();
+                *record = record.checked_add(net_amount).unwrap();
             } else {
-                unbonds.insert(key, ud.amount);
+                unbonds.insert(key, net_amount);
             }
         }
     }
