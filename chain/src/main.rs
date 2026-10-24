@@ -957,7 +957,7 @@ async fn query_token_supplies(
                 }
             }
         })
-        .buffer_unordered(32);
+        .buffer_unordered(shared::utils::rpc_concurrency());
 
     while let Some(maybe_supply) = stream.next().await {
         let supply = maybe_supply?;

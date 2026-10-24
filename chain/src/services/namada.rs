@@ -177,7 +177,7 @@ pub async fn query_balance(
             })
         })
         .map(futures::future::ready)
-        .buffer_unordered(32)
+        .buffer_unordered(shared::utils::rpc_concurrency())
         .collect::<Vec<_>>()
         .await)
 }
@@ -511,7 +511,7 @@ pub async fn query_bonds(
             Some(bonds)
         })
         .map(futures::future::ready)
-        .buffer_unordered(32)
+        .buffer_unordered(shared::utils::rpc_concurrency())
         .collect::<Vec<_>>()
         .await;
 
@@ -585,7 +585,7 @@ pub async fn query_unbonds(
             }
         })
         .map(futures::future::ready)
-        .buffer_unordered(32)
+        .buffer_unordered(shared::utils::rpc_concurrency())
         .collect::<Vec<_>>()
         .await;
 
@@ -618,7 +618,7 @@ pub async fn query_redelegations(
             })
         })
         .map(futures::future::ready)
-        .buffer_unordered(20)
+        .buffer_unordered(shared::utils::rpc_concurrency().min(20))
         .collect::<Vec<_>>()
         .await
         .into_iter()
@@ -698,7 +698,7 @@ pub async fn query_tallies(
             Some((proposal, tally_type))
         })
         .map(futures::future::ready)
-        .buffer_unordered(32)
+        .buffer_unordered(shared::utils::rpc_concurrency())
         .collect::<Vec<_>>()
         .await;
 
@@ -730,7 +730,7 @@ pub async fn query_all_votes(
             Some(votes)
         })
         .map(futures::future::ready)
-        .buffer_unordered(32)
+        .buffer_unordered(shared::utils::rpc_concurrency())
         .collect::<Vec<_>>()
         .await;
 
@@ -845,7 +845,7 @@ pub async fn get_validator_set_at_epoch(
                 state: validator_state
             })
         })
-        .buffer_unordered(32)
+        .buffer_unordered(shared::utils::rpc_concurrency())
         .try_collect::<HashSet<_>>()
         .await?;
 
@@ -1011,7 +1011,7 @@ where
 
     let mut stream = futures::stream::iter(tokens)
         .map(|address| get_throughput_rate_limit(client, address, epoch))
-        .buffer_unordered(32);
+        .buffer_unordered(shared::utils::rpc_concurrency());
 
     while let Some(maybe_address) = stream.next().await {
         buffer.push(maybe_address?);
@@ -1070,7 +1070,7 @@ pub async fn query_all_redelegations(
                 })
                 .collect::<anyhow::Result<Vec<_>>>()
         })
-        .buffer_unordered(20)
+        .buffer_unordered(shared::utils::rpc_concurrency().min(20))
         .collect::<Vec<_>>()
         .await
         .into_iter()
