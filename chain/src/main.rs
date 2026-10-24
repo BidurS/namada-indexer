@@ -317,7 +317,7 @@ async fn crawling_fn(
         block.transactions.len()
     );
 
-    let ibc_tokens = block
+    let mut ibc_tokens = block
         .ibc_tokens()
         .into_iter()
         .map(Token::Ibc)
@@ -335,8 +335,11 @@ async fn crawling_fn(
         .collect::<HashSet<_>>();
 
     if new_epoch {
-        all_changed_tokens_supply
-            .extend(query_tokens(&client).await.into_rpc_error()?);
+        let tokens = query_tokens(&client).await.into_rpc_error()?;
+        all_changed_tokens_supply.extend(tokens.iter().cloned());
+        // Supplies of all tokens are stored on epoch change, so every token
+        // must exist in the `token` table to satisfy the foreign key
+        ibc_tokens.extend(tokens);
     }
 
     let token_supplies =
